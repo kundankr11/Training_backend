@@ -33,28 +33,29 @@ class hichartsController extends Controller
 		$final_data = array(); 
 		$curr_user = $request->auth;
 		$id = $curr_user->id;
-		$after_duedate = DB::table('task')
-		->join('vmusers', 'vmusers.id', '=', 'task.assignee')
-		// ->select('taskStatus', DB::raw('count(*) as total'))
-		->where('vmusers.id', '=', $id)
-		->where('task.dueDate','<',Carbon::now())->count();
+		$after_duedate = task::where('assignee', '=', $id)
+		->where('taskStatus', '!=', 'deleted')->orWhere('taskStatus','!=','completed')
+		->where('dueDate','<',Carbon::now())->count();
 
-		$completed_before_duedate = DB::table('task')
-		->join('vmusers', 'vmusers.id', '=', 'task.assignee')
-		->select('task.dueDate')
-		->where('vmusers.id', '=', $id)
-		->where('task.taskStatus','=',"completed")
-		->where('task.dueDate','>=',DB::raw('task.updated_at'))->count();
+		// echo $after_duedate ;
+		// echo "          ";
 
 
-		// ->groupBy('task.taskStatus')
-		// ->pluck('total','taskStatus')->all();
-		$user_info = DB::table('task')
-		->join('vmusers', 'vmusers.id', '=', 'task.assignee')
+		$completed_after_duedate = task::where('assignee','=',$id)
+		->where('taskStatus','=',"completed")
+		->where('dueDate','<',DB::raw('task.updated_at'))->count();
+
+		// echo $completed_after_duedate;
+
+
+		$user_info = task::where('assignee','=',$id)
+		->where('dueDate','>=',DB::raw('task.updated_at'))	
 		->select('taskStatus', DB::raw('count(*) as total'))
-		->where('vmusers.id', '=', $id)
 		->groupBy('taskStatus')
 		->pluck('total','taskStatus')->all();
+
+
+
 
 		if($after_duedate !== 0){
 			$pie_data["after_duedate"] = $after_duedate;
@@ -62,11 +63,11 @@ class hichartsController extends Controller
 		else{
 			$pie_data["after_duedate"] = 0;
 		}
-		if($completed_before_duedate !== 0){
-			$pie_data["completed_before_duedate"] = $completed_before_duedate;
+		if($completed_after_duedate !== 0){
+			$pie_data["completed_after_duedate"] = $completed_after_duedate;
 		}
 		else{
-			$pie_data["completed_before_duedate"] = 0;
+			$pie_data["completed_after_duedate"] = 0;
 		}
 
 		if(array_key_exists("assigned", $user_info)){
@@ -97,9 +98,9 @@ class hichartsController extends Controller
 			$pie_data["deleted"] = 0;
 		}
 
-		$final_data["completed_on_time"] = $pie_data["completed_before_duedate"];
-		$final_data["completed_after_deadline"] = $pie_data["completed"] - $pie_data["completed_before_duedate"];
-		$final_data["overdues"] = $pie_data["after_duedate"] - $final_data["completed_after_deadline"];
+		$final_data["completed_on_time"] = $pie_data["completed"];
+		$final_data["completed_after_deadline"] = $pie_data["completed_after_duedate"];
+		$final_data["overdues"] = $pie_data["after_duedate"];
 		$final_data["progress"] = $pie_data["inProgress"];
 		$final_data["noActivities"] = $pie_data["noActivities"];
 
