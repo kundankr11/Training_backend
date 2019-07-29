@@ -33,8 +33,10 @@ class hichartsController extends Controller
 		$final_data = array(); 
 		$curr_user = $request->auth;
 		$id = $curr_user->id;
+		
 		$after_duedate = task::where('assignee', '=', $id)
-		->where('taskStatus', '!=', 'deleted')->orWhere('taskStatus','!=','completed')
+		->where('taskStatus', '!=', 'deleted')
+		->where('taskStatus', '!=', 'completed')
 		->where('dueDate','<',Carbon::now())->count();
 
 		// echo $after_duedate ;
@@ -49,7 +51,7 @@ class hichartsController extends Controller
 
 
 		$user_info = task::where('assignee','=',$id)
-		->where('dueDate','>=',DB::raw('task.updated_at'))	
+		->where('dueDate','>=',Carbon::now())	
 		->select('taskStatus', DB::raw('count(*) as total'))
 		->groupBy('taskStatus')
 		->pluck('total','taskStatus')->all();
@@ -97,6 +99,7 @@ class hichartsController extends Controller
 		else{
 			$pie_data["deleted"] = 0;
 		}
+		
 
 		$final_data["completed_on_time"] = $pie_data["completed"];
 		$final_data["completed_after_deadline"] = $pie_data["completed_after_duedate"];
@@ -104,39 +107,6 @@ class hichartsController extends Controller
 		$final_data["progress"] = $pie_data["inProgress"];
 		$final_data["noActivities"] = $pie_data["noActivities"];
 
-		$total = ($final_data["completed_on_time"] + $final_data["completed_after_deadline"] + $final_data["overdues"] + $final_data["progress"] + $final_data["noActivities"])/100;
-		if($total!==0)
-		{
-		foreach ($final_data as $key => $value) {
-			# code...
-			$final_data[$key] = $final_data[$key]/$total;
-		}
-	}
-
-
-
-
-		// $user_info1 = DB::table('task')
-		// ->join('vmusers as vm', 'task.assigner', '=', 'vm.id')
-		// ->join('vmusers as new', 'new.id', '=', 'task.assignee')
-		// ->select('taskStatus')
-		// ->where('vm.id', )
-		// ->where('task.dueDate','<',Carbon::now())
-	 //    ->count();
-		// dd($user_info1);
-
-
-		
-
-		
-
-		
-		// $user_info["progress"] = $user_info["in-progress"];
-		// unset($user_info["in-progress"]);
-		// $user_info["completed"] = $user_info["completed"]/0.25;
-		// $user_info["deleted"] = $user_info["deleted"]/0.25;
-		// $user_info["assigned"] = $user_info["assigned"]/0.25;
-		// $user_info["progress"] = $user_info["progress"]/0.25;
 		
 		return response()->json([
 			'data' => $final_data

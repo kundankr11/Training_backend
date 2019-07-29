@@ -181,7 +181,6 @@ class taskController extends Controller
 		];
 		$curr_user = $request->auth;
 
-
 		$this->validate($request, $rules);
 		$taskTitle = $request->input('taskTitle');
 		$taskDes = $request->input('taskDes');
@@ -190,14 +189,9 @@ class taskController extends Controller
 		$beforedate = $request->input('beforedate');
 		$assigner = $request->input('assigner');
 		$status = $request->input('status');
-
 		$taskID = $request->input('taskID');
 
 		$result = task::where(function($query) use ($taskTitle, $taskDes, $assignee, $assigner, $dueDate, $status, $beforedate, $curr_user, $taskID){
-		// ->join('vmusers as vm', 'task.assigner', '=', 'vm.id')
-		// ->join('vmusers as new', 'new.id', '=', 'task.assignee')
-		// ->select('task.id', 'task.taskTitle', 'task.taskStatus','task.taskDes','new.name as Assignee', 'vm.name as Assigner', 'task.dueDate')
-
 			if($curr_user->role !== 1) $query->where('task.assignee', '=', $curr_user->id);
 			if(0) $query->where('task.taskStatus','!=',"deleted");
 			if(!is_null($taskTitle)) $query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');
@@ -222,23 +216,6 @@ class taskController extends Controller
 		return response()->json([
 			'table' => $result
 		], 201);
-	   	// $result = task::where(function($query) use ($taskTitle, $taskDes, $assigner, $dueDate, $status, $curr_user, $taskID){
-	    //                    if(!is_null($taskTitle)) {$query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');}
-	    //                    $query->where('assigner', '=', $curr_user->id)->orWhere('assignee', '=', $curr_user->id);
-		//             	if(1) $query->where('task.taskStatus','!==',"deleted");
-		//             	if(!is_null($taskDes)) {$query->where('task.taskDes', 'LIKE','%'.$taskDes.'%');}
-		// 	            if(!is_null($status)) $query->where('task.taskStatus','LIKE','%'.$status.'%');
-		// 	            if(!is_null($dueDate)) $query->where('task.dueDate','>',$dueDate);
-		// 	            if(!is_null($taskID)) $query->where('task.id','=',$taskID);		           
-		//                 })
-
-		//                 // ->whereHas('assigned_by', function($query) use ($assigner){
-		//                 // if(!is_null($assigner)) $query->where('name', 'LIKE', '%'.$assigner.'%');
-		//                 // })
-		//                 // ->with('assigned_to')
-		//                 ->get();
-
-		//                 return $result;
 
 	}  
 
@@ -266,11 +243,7 @@ class taskController extends Controller
 		$taskID = $request->input('taskID');
 
 
-        $result = task::where(function($query) use ($taskTitle, $taskDes, $assignee, $assigner, $dueDate, $status, $beforedate, $curr_user, $taskID){
-		// ->join('vmusers as vm', 'task.assigner', '=', 'vm.id')
-		// ->join('vmusers as new', 'new.id', '=', 'task.assignee')
-		// ->select('task.id', 'task.taskTitle', 'task.taskStatus','task.taskDes','new.name as Assignee', 'vm.name as Assigner', 'task.dueDate')
-
+		$result = task::where(function($query) use ($taskTitle, $taskDes, $assignee, $assigner, $dueDate, $status, $beforedate, $curr_user, $taskID){
 			$query->where('task.assigner', '=', $curr_user->id);
 			if(!is_null($taskTitle)) $query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');
 			if(!is_null($taskDes)) $query->where('task.taskDes', 'LIKE','%'.$taskDes.'%');
@@ -294,26 +267,6 @@ class taskController extends Controller
 		return response()->json([
 			'table' => $result
 		], 201);
-        
-
-		// $result = DB::table('task')
-		// ->join('vmusers as vm', 'task.assigner', '=', 'vm.id')
-		// ->join('vmusers as new', 'new.id', '=', 'task.assignee')
-		// ->select('task.id', 'task.taskTitle', 'task.taskStatus','task.taskDes','new.name as Assignee', 'vm.name as Assigner', 'task.dueDate')
-		// ->where(function($query) use ($taskTitle, $taskDes, $assignee, $dueDate, $status, $beforedate, $curr_user, $taskID){
-		// 	$query->where('task.assigner', '=', $curr_user->id);
-		// 	if(!is_null($assignee)) $query->where('new.name', 'LIKE','%'.$assignee.'%');
-		// 	if(!is_null($taskTitle)) $query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');
-		// 	if(!is_null($taskDes)) $query->where('task.taskDes', 'LIKE','%'.$taskDes.'%');
-		// 	if(!is_null($status)) $query->where('task.taskStatus','LIKE','%'.$status.'%');
-		// 	$query->where('task.taskStatus','!=',"deleted");
-		// 	if(!is_null($dueDate)) $query->where('task.dueDate','>',$dueDate);
-		// 	if(!is_null($beforedate)) $query->where('task.dueDate','<',$beforedate);
-		// 	if(!is_null($taskID)) $query->where('task.id','=',$taskID);
-		// })->paginate(5);
-		// return response()->json([
-		// 	'table' => $result
-		// ], 201);
 
 	}
 
@@ -339,8 +292,8 @@ class taskController extends Controller
 		$pie = $request->input('pie');
 		$assignee = $curr_user->name;
 
-        $result = task::where(function($query) use ($taskTitle, $taskDes, $assignee, $assigner, $dueDate, $status, $curr_user, $taskID, $pie){
-		$query->where('task.assignee', '=', $curr_user->id);
+		$result = task::where(function($query) use ($taskTitle, $taskDes, $assignee, $assigner, $dueDate, $status, $curr_user, $taskID, $pie){
+			$query->where('task.assignee', '=', $curr_user->id);
 			if(!is_null($taskTitle)) $query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');
 			if(!is_null($taskDes)) $query->where('task.taskDes', 'LIKE','%'.$taskDes.'%');
 			if(!is_null($status)) $query->where('task.taskStatus','LIKE','%'.$status.'%');
@@ -358,41 +311,13 @@ class taskController extends Controller
 			if(!is_null($assigner)) $query->where('name', 'LIKE', '%'.$assigner.'%');
 		})
 		->with('assigned_to:id,name' , 'assigned_by:id,name')
-        ->orderBy('dueDate')
-		->paginate(5);
+		->orderBy('dueDate')
+		->paginate(10);
 		return response()->json([
 			'table' => $result
 		], 201);
-        
-
-		// $result = DB::table('task')
-		// ->join('vmusers as vm', 'task.assigner', '=', 'vm.id')
-		// ->join('vmusers as new', 'new.id', '=', 'task.assignee')
-		// ->select('task.id', 'task.taskTitle', 'task.taskStatus','task.taskDes','new.name as Assignee', 'vm.name as Assigner', 'task.dueDate')
-		// ->where(function($query) use ($taskTitle, $taskDes, $assigner, $dueDate, $status, $curr_user, $taskID, $pie){
-		// 	$query->where('task.assignee', '=', $curr_user->id);
-		// 	if(!is_null($assigner)) $query->where('new.name', 'LIKE','%'.$assigner.'%');
-		// 	if(!is_null($taskTitle)) $query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');
-		// 	$query->where('task.taskStatus','!=',"deleted");
-		// 	if(!is_null($taskDes)) $query->where('task.taskDes', 'LIKE','%'.$taskDes.'%');
-		// 	if(!is_null($status)) $query->where('task.taskStatus','LIKE','%'.$status.'%');
-		// 	if(!is_null($dueDate)) $query->where('task.dueDate','>',$dueDate);
-		// 	if(!is_null($taskID)) $query->where('task.id','=',$taskID);
-		// 	if($pie) $query->where('taskStatus', '=',"assigned" )->orWhere('taskStatus', '=',"in-progress" );
-
-		//     })
-  //       ->orderBy('dueDate')
-		// ->paginate(5);
-		// return response()->json([
-		// 	'table' => $result
-		// ], 201);
 
 	}
-
-
-
-
-
 
 
 }
