@@ -39,26 +39,16 @@ class hichartsController extends Controller
 		->where('taskStatus', '!=', 'completed')
 		->where('dueDate','<',Carbon::now())->count();
 
-		// echo $after_duedate ;
-		// echo "          ";
-
-
 		$completed_after_duedate = task::where('assignee','=',$id)
 		->where('taskStatus','=',"completed")
 		->where('dueDate','<',DB::raw('task.updated_at'))->count();
-
-		// echo $completed_after_duedate;
-
 
 		$user_info = task::where('assignee','=',$id)
 		->where('dueDate','>=',Carbon::now())	
 		->select('taskStatus', DB::raw('count(*) as total'))
 		->groupBy('taskStatus')
 		->pluck('total','taskStatus')->all();
-
-
-
-
+		
 		if($after_duedate !== 0){
 			$pie_data["after_duedate"] = $after_duedate;
 		}

@@ -35,7 +35,7 @@ class mailController extends Controller
     public function taskmail()
     {
         Mail::to('en11kundan@gmail.com')
-        ->later( 10 , new tasking());
+        ->queue(new tasking());
     }
 
     public function password_reset_mail(Request $request)
@@ -54,8 +54,7 @@ class mailController extends Controller
 
             
             $token = $this->createToken($user);
-            Mail::to($email)
-            ->send( new passwordReset($token));
-
+                            Mail::to($email)
+                            ->send( new passwordReset($token));
         }
     }

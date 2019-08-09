@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\task;
+use Event;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Events\TaskCreationEvent;
 use Tymon\JWTAuth\JWTAuth;
 use Closure;
 use Exception;
@@ -39,6 +41,7 @@ class taskController extends Controller
 		}
 
 		$new_task->save();
+		Event::dispatch(new TaskCreationEvent($new_task));
 		return response()->json([
 			'data' => 'Task created successfully'
 		], 201);
@@ -48,8 +51,8 @@ class taskController extends Controller
 	public function creatorUpdate(Request $request)
 	{
 		$rules = [
-			'taskTitle' => 'string|min:5|max:40|nullable',
-			'taskDes' => 'string|min:10|max:200|nullable',
+			'taskTitle' => 'string|min:5|nullable',
+			'taskDes' => 'string|min:10|nullable',
 			'dueDate' => 'date|after:today|nullable',
 			'taskID' => 'integer|required',
 		];
@@ -81,7 +84,7 @@ class taskController extends Controller
 			], 401);
 		}
 
-		if($update_task!==null && $update_task->taskStatus !== "deleted" )
+		if( $update_task->taskStatus !== "deleted" )
 		{
 			if($taskTitle !== null) $update_task->taskTitle = $taskTitle;					
 			if($taskDes !== null) $update_task->taskDes = $taskDes;
@@ -171,16 +174,15 @@ class taskController extends Controller
 	{
 		$rules = [
 			'dueDate'=> 'date|nullable',
-			'status' => 'string|max:20|nullable',
+			'status' => 'string|nullable',
 			'assignee' => 'string|nullable',
 			'assigner' => 'string|nullable',
-			'taskDes' => 'string|max:10|nullable',
-			'taskTitle' => 'string|max:10|nullable',
+			'taskDes' => 'stringnullable',
+			'taskTitle' => 'string|nullable',
 			'beforedate' => 'date|nullable',
 			'taskID' => 'integer|nullable',
 		];
 		$curr_user = $request->auth;
-
 		$this->validate($request, $rules);
 		$taskTitle = $request->input('taskTitle');
 		$taskDes = $request->input('taskDes');
@@ -193,7 +195,7 @@ class taskController extends Controller
 
 		$result = task::where(function($query) use ($taskTitle, $taskDes, $assignee, $assigner, $dueDate, $status, $beforedate, $curr_user, $taskID){
 			if($curr_user->role !== 1) $query->where('task.assignee', '=', $curr_user->id);
-			if(0) $query->where('task.taskStatus','!=',"deleted");
+			$query->where('task.taskStatus','!=',"deleted");
 			if(!is_null($taskTitle)) $query->where('task.taskTitle', 'LIKE','%'.$taskTitle.'%');
 			if(!is_null($taskDes)) $query->where('task.taskDes', 'LIKE','%'.$taskDes.'%');
 			if(!is_null($status)) $query->where('task.taskStatus','LIKE','%'.$status.'%');
@@ -311,8 +313,8 @@ class taskController extends Controller
 			if(!is_null($assigner)) $query->where('name', 'LIKE', '%'.$assigner.'%');
 		})
 		->with('assigned_to:id,name' , 'assigned_by:id,name')
-		->orderBy('dueDate')
-		->paginate(10);
+		->orderBy('created_at','desc')
+		->paginate(5);
 		return response()->json([
 			'table' => $result
 		], 201);

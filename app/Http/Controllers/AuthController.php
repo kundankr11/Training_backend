@@ -1,13 +1,16 @@
 <?php
 namespace App\Http\Controllers;
 use Validator;
+use Event;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Firebase\JWT\ExpiredException;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Lumen\Routing\Controller;
+use App\Events\LoginEvent;
 use App\Vmuser;
 use Symfony\Component\HttpFoundation\Cookie;
+
 class AuthController extends Controller 
 {
     //private $request;
@@ -54,7 +57,7 @@ class AuthController extends Controller
         // Verify the password and generate the token
  
     if(Hash::check($request->input('password'), $login->password)){
-      
+      Event::dispatch(new LoginEvent($login));
         return response()->json([
             'status'  => 200,
             'message' => 'Login Successful',
